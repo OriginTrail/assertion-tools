@@ -31,7 +31,7 @@ function calculateRoot(assertion) {
         index
     )))
     const tree = new MerkleTree(leaves, keccak256, {sortPairs: true})
-    return tree.getRoot().toString('hex')
+    return `0x${tree.getRoot().toString('hex')}`;
 }
 
 module.exports = {
