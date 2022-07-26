@@ -1,0 +1,28 @@
+{
+  "name": "assertion-tools",
+  "version": "1.0.0",
+  "description": "Common assertion tools used in ot-node and dkg.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OriginTrail/assertion-tools.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OriginTrail/assertion-tools/issues"
+  },
+  "homepage": "https://github.com/OriginTrail/assertion-tools#readme",
+  "dependencies": {
+    "jsonld": "^6.0.0",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.32",
+    "web3": "^1.7.4"
+  },
+  "devDependencies": {
+    "mocha": "^10.0.0"
+  }
+}
