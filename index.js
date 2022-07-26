@@ -2,6 +2,7 @@ const jsonld = require('jsonld');
 const keccak256 = require('keccak256')
 const web3 = require('web3')
 const {MerkleTree} = require('merkletreejs')
+const {sha256} = require('multiformats/hashes/sha2');
 
 function formatAssertion(json) {
     return new Promise(async (accept, reject) => {
@@ -34,7 +35,12 @@ function calculateRoot(assertion) {
     return `0x${tree.getRoot().toString('hex')}`;
 }
 
+async function peerId2Hash(peerId) {
+    return `0x${Buffer.from((await sha256.digest(peerId.toBytes())).digest).toString('hex')}`;
+}
+
 module.exports = {
     formatAssertion,
     calculateRoot,
+    peerId2Hash,
 }
