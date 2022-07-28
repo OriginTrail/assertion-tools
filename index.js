@@ -40,23 +40,8 @@ async function peerId2Hash(peerId) {
     return `0x${Buffer.from((await sha256.digest(peerId.toBytes())).digest).toString('hex')}`;
 }
 
-function encrypt(data, key, iv) {
-    let cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    let encrypted = cipher.update(data, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
-    return encrypted;
-}
-
-function decrypt(encrypted, key, iv) {
-    let decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encrypted, 'base64', 'utf8');
-    return (decrypted + decipher.final('utf8'));
-}
-
 module.exports = {
     formatAssertion,
     calculateRoot,
     peerId2Hash,
-    encrypt,
-    decrypt
 }

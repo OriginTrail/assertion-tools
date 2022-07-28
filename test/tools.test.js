@@ -21,22 +21,4 @@ describe('Simple tools test', () => {
         const assertionId = calculateRoot(assertion);
         assert(assertionId);
     });
-
-    it('symmetric encryption', () => {
-        const key = crypto.randomBytes(32);
-        const iv = crypto.randomBytes(16);
-
-        const assertion = [
-            "_:b0 <http://schema.org/jobTitle> \"Professor\" .",
-            "_:b0 <http://schema.org/name> \"Jane Doe\" .",
-            "_:b0 <http://schema.org/telephone> \"(425) 123-4567\" ."
-        ];
-
-        const encryptedAssertion = assertion.map(x=>encrypt(x, key, iv))
-        const originalAssertion = encryptedAssertion.map(x=>decrypt(x, key, iv))
-
-        for (let i = 0; i < assertion.length; i += 1) {
-            assert (assertion[i] === originalAssertion[i]);
-        }
-    });
 });
