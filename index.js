@@ -3,7 +3,6 @@ const keccak256 = require('keccak256')
 const web3 = require('web3')
 const {MerkleTree} = require('merkletreejs')
 const {sha256} = require('multiformats/hashes/sha2');
-const crypto = require("crypto");
 
 function formatAssertion(json) {
     return new Promise(async (accept, reject) => {
