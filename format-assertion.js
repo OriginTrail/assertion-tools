@@ -1,11 +1,7 @@
 const jsonld = require("jsonld");
 
 module.exports = formatAssertion = async (json) => {
-  const compactedJson = await jsonld.compact(json, {
-    "@context": "http://schema.org/",
-  });
-
-  const canonizedJson = await jsonld.canonize(compactedJson, {
+  const canonizedJson = await jsonld.canonize(json, {
     algorithm: "URDNA2015",
     format: "application/n-quads",
   });
@@ -13,7 +9,7 @@ module.exports = formatAssertion = async (json) => {
   const assertion = canonizedJson.split("\n").filter((x) => x !== "");
 
   if (assertion && assertion.length === 0) {
-    reject("File format is corrupted, no n-quads are extracted.");
+    throw Error("File format is corrupted, no n-quads are extracted.");
   }
 
   return assertion;
