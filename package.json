@@ -1,6 +1,6 @@
 {
   "name": "assertion-tools",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Common assertion tools used in ot-node and dkg.js",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/OriginTrail/assertion-tools#readme",
   "dependencies": {
-    "jsonld": "^6.0.0",
+    "jsonld": "^8.1.0",
     "keccak256": "^1.0.6",
     "merkletreejs": "^0.2.32",
     "multiformats": "^9.7.1",
