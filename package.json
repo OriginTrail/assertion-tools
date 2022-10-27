@@ -1,6 +1,6 @@
 {
   "name": "assertion-tools",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Common assertion tools used in ot-node and dkg.js",
   "main": "index.js",
   "scripts": {
