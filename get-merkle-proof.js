@@ -10,10 +10,8 @@ module.exports = getMerkleProof = (nquadsArray, challenge) => {
   );
   const tree = new MerkleTree(leaves, keccak256, { sortPairs: true });
 
-  const proof = tree.getProof(leaves[parseInt(challenge, 10)]);
-
   return {
-    leaf: leaves[parseInt(challenge, 10)],
-    proof: proof.map((x) => x.data),
+    leaf: keccak256[nquadsArray(challenge)],
+    proof: tree.getHexProof(leaves[challenge]),
   };
 };

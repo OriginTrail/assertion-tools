@@ -19,11 +19,11 @@
   "dependencies": {
     "jsonld": "^8.1.0",
     "keccak256": "^1.0.6",
-    "merkletreejs": "^0.2.32",
-    "multiformats": "^9.9.0",
-    "web3": "^1.8"
+    "merkletreejs": "^0.3.2",
+    "multiformats": "^10.0.2",
+    "web3": "^1.8.1"
   },
   "devDependencies": {
-    "mocha": "^10.0.0"
+    "mocha": "^10.1.0"
   }
 }
