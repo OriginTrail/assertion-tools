@@ -19,10 +19,7 @@
   "dependencies": {
     "ethers": "^5.7.2",
     "jsonld": "^8.1.0",
-    "keccak256": "^1.0.6",
-    "merkletreejs": "^0.3.2",
-    "multiformats": "^9.9.0",
-    "web3": "^1.8.1"
+    "merkletreejs": "^0.3.2"
   },
   "devDependencies": {
     "mocha": "^10.1.0"
