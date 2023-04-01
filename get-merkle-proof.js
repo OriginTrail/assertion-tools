@@ -7,7 +7,7 @@ module.exports = getMerkleProof = (nquadsArray, challenge) => {
 
   const leaves = nquadsArray.map((element, index) =>
     keccak256(
-      ethers.utils.solidityPack(
+      ethers.solidityPacked(
         ["bytes32", "uint256"],
         [keccak256(element), index],
       )

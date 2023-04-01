@@ -17,11 +17,11 @@
   },
   "homepage": "https://github.com/OriginTrail/assertion-tools#readme",
   "dependencies": {
-    "ethers": "^5.7.2",
-    "jsonld": "^8.1.0",
-    "merkletreejs": "^0.3.2"
+    "ethers": "^6.2.3",
+    "jsonld": "^8.1.1",
+    "merkletreejs": "^0.3.9"
   },
   "devDependencies": {
-    "mocha": "^10.1.0"
+    "mocha": "^10.2.0"
   }
 }
