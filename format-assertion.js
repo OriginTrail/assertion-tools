@@ -3,7 +3,7 @@ const jsonld = require("jsonld");
 const ALGORITHM = "URDNA2015";
 const FORMAT = "application/n-quads";
 
-module.exports = formatAssertion = async (json, inputFormat) => {
+async function formatAssertion(json, inputFormat) {
   const options = {
     algorithm: ALGORITHM,
     format: FORMAT,
@@ -12,8 +12,8 @@ module.exports = formatAssertion = async (json, inputFormat) => {
   if (inputFormat) {
     options.inputFormat = inputFormat;
   }
-  const canonizedJson = await jsonld.canonize(json, options);
 
+  const canonizedJson = await jsonld.canonize(json, options);
   const assertion = canonizedJson.split("\n").filter((x) => x !== "");
 
   if (assertion && assertion.length === 0) {
@@ -21,4 +21,6 @@ module.exports = formatAssertion = async (json, inputFormat) => {
   }
 
   return assertion;
-};
+}
+
+module.exports = formatAssertion;

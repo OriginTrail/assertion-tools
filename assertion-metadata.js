@@ -1,11 +1,17 @@
-module.exports.getAssertionSizeInBytes = (assertion) => {
-    return Buffer.byteLength(JSON.stringify(assertion));
-};
+function getAssertionSizeInBytes(assertion) {
+  return Buffer.byteLength(JSON.stringify(assertion));
+}
 
-module.exports.getAssertionTriplesNumber = (assertion) => {
-    return assertion.length;
-};
+function getAssertionTriplesNumber(assertion) {
+  return assertion.length;
+}
 
-module.exports.getAssertionChunksNumber = (assertion) => {
-    return assertion.length;
+function getAssertionChunksNumber(assertion) {
+  return assertion.length;
+}
+
+module.exports = {
+  getAssertionSizeInBytes,
+  getAssertionTriplesNumber,
+  getAssertionChunksNumber,
 };
