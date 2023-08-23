@@ -1,5 +1,8 @@
 function getAssertionSizeInBytes(assertion) {
-  return Buffer.byteLength(JSON.stringify(assertion));
+  const jsonString = JSON.stringify(assertion);
+  const encoder = new TextEncoder();
+  const encodedBytes = encoder.encode(jsonString);
+  return encodedBytes.length;
 }
 
 function getAssertionTriplesNumber(assertion) {
