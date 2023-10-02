@@ -13,8 +13,8 @@ function getAssertionChunksNumber(assertion) {
   return assertion.length;
 }
 
-module.exports = {
+export default {
   getAssertionSizeInBytes,
   getAssertionTriplesNumber,
   getAssertionChunksNumber,
-};
+}
