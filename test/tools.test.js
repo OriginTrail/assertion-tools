@@ -1,7 +1,7 @@
 import { describe, it, afterEach } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { assertionFormatting, calculateRoot } from '../index.js';
+import { calculateRoot, formatAssertion, formatGraph } from '../index.js';
 
 let assertion;
 
@@ -19,7 +19,7 @@ describe('Simple tools test', () => {
             'spouse': 'http://dbpedia.org/resource/Cynthia_Lennon'
         };
 
-        assertion = await assertionFormatting.normalizeDataset(example);
+        assertion = await formatAssertion(example);
 
         expect(assertion).to.not.equal(null);
         expect(assertion.length).to.not.equal(0);
@@ -67,7 +67,7 @@ describe('Simple tools test', () => {
             '<uuid:user:1> <http://schema.org/name> "Adam" .'
         ];
         
-        const assertions = await assertionFormatting.formatGraph(exampleContent);
+        const assertions = await formatGraph(exampleContent);
 
         expect(assertions).to.have.property('public').to.deep.equal(expectedPublicNQuads);
         expect(assertions).to.have.property('private').to.deep.equal(expectedPrivateNQuads);
