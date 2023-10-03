@@ -1,10 +1,10 @@
 {
   "name": "assertion-tools",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "Common assertion tools used in ot-node and dkg.js",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "nyc --all mocha --exit"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,13 @@
     "merkletreejs": "^0.3.2"
   },
   "devDependencies": {
-    "mocha": "^10.1.0"
+    "chai": "^4.3.10",
+    "eslint": "^8.50.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^9.0.0",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "prettier": "^3.0.3",
+    "sinon": "^16.0.0"
   }
 }

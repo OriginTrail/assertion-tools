@@ -1,6 +1,6 @@
-const ethers = require("ethers");
-const keccak256 = require("./keccak256.js");
-const { MerkleTree } = require("merkletreejs");
+const ethers = require('ethers');
+const { MerkleTree } = require('merkletreejs');
+const keccak256 = require('./keccak256.js');
 
 function getMerkleProof(nquadsArray, challenge) {
   nquadsArray.sort();
@@ -8,7 +8,7 @@ function getMerkleProof(nquadsArray, challenge) {
   const leaves = nquadsArray.map((element, index) =>
     keccak256(
       ethers.utils.solidityPack(
-        ["bytes32", "uint256"],
+        ['bytes32', 'uint256'],
         [keccak256(element), index]
       )
     )

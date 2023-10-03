@@ -1,6 +1,6 @@
-const ethers = require("ethers");
+const ethers = require('ethers');
 
-const keccak256 = (data) => {
+function keccak256(data) {
   let bytesLikeData = data;
   if (!ethers.utils.isBytesLike(data)) {
     bytesLikeData = ethers.utils.toUtf8Bytes(data);
