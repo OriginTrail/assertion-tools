@@ -1,6 +1,6 @@
-import ethers from 'ethers';
-import { MerkleTree } from 'merkletreejs';
-import keccak256 from './keccak256.js';
+const ethers = require('ethers');
+const { MerkleTree } = require('merkletreejs');
+const keccak256 = require('./keccak256.js');
 
 function getMerkleProof(nquadsArray, challenge) {
   nquadsArray.sort();
@@ -21,4 +21,4 @@ function getMerkleProof(nquadsArray, challenge) {
   };
 }
 
-export default getMerkleProof;
+module.exports = getMerkleProof;

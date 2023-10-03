@@ -1,7 +1,7 @@
-import ethers from 'ethers';
+const ethers = require('ethers');
 
 async function peerId2Hash(peerId) {
   return ethers.utils.sha256(ethers.utils.toUtf8Bytes(peerId));
 }
 
-export default peerId2Hash;
+module.exports = peerId2Hash;

@@ -1,7 +1,7 @@
-import { describe, it, afterEach } from 'mocha';
-import { expect } from 'chai';
-import sinon from 'sinon';
-import { calculateRoot, formatAssertion, formatGraph } from '../index.js';
+const { describe, it, afterEach } = require('mocha');
+const { expect } = require('chai');
+const sinon = require('sinon');
+const { calculateRoot, formatAssertion, formatGraph } = require('../index.js');
 
 let assertion;
 

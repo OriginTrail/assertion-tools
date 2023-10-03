@@ -1,6 +1,6 @@
-import formatAssertion from './assertion-formatting.js';
-import calculateRoot from './calculate-root.js';
-import PRIVATE_ASSERTION_PREDICATE from './constants.js';
+const formatAssertion = require('./assertion-formatting.js');
+const calculateRoot = require('./calculate-root.js');
+const PRIVATE_ASSERTION_PREDICATE = require('./constants.js');
 
 function isEmptyObject(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
@@ -37,4 +37,4 @@ async function formatGraph(content) {
     return result;
   }
 
-export default formatGraph;
+module.exports = formatGraph;

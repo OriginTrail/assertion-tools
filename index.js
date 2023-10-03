@@ -1,9 +1,9 @@
-import assertionMetadata from './assertion-metadata.js';
-import calculateRoot from './calculate-root.js';
-import formatAssertion from './assertion-formatting.js';
-import formatGraph from './graph-formatting.js';
-import getMerkleProof from './get-merkle-proof.js';
-import peerId2Hash from './peer-id-2-hash.js';
-import keccak256 from './keccak256.js';
+const assertionMetadata = require('./assertion-metadata.js');
+const calculateRoot = require('./calculate-root.js');
+const formatAssertion = require('./assertion-formatting.js');
+const formatGraph = require('./graph-formatting.js');
+const getMerkleProof = require('./get-merkle-proof.js');
+const peerId2Hash = require('./peer-id-2-hash.js');
+const keccak256 = require('./keccak256.js');
 
-export { calculateRoot, formatAssertion, formatGraph, getMerkleProof, peerId2Hash, keccak256, assertionMetadata };
+module.exports = { calculateRoot, formatAssertion, formatGraph, getMerkleProof, peerId2Hash, keccak256, assertionMetadata };

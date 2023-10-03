@@ -1,4 +1,4 @@
-import ethers from 'ethers';
+const ethers = require('ethers');
 
 function keccak256(data) {
   let bytesLikeData = data;
@@ -8,4 +8,4 @@ function keccak256(data) {
   return ethers.utils.keccak256(bytesLikeData);
 };
 
-export default keccak256;
+module.exports = keccak256;

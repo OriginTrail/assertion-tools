@@ -1,6 +1,6 @@
-import ethers from 'ethers';
-import { MerkleTree } from 'merkletreejs';
-import keccak256 from './keccak256.js';
+const ethers = require('ethers');
+const { MerkleTree } = require('merkletreejs');
+const keccak256 = require('./keccak256.js');
 
 function calculateRoot(assertion) {
   assertion.sort();
@@ -16,4 +16,4 @@ function calculateRoot(assertion) {
   return `0x${tree.getRoot().toString('hex')}`;
 }
 
-export default calculateRoot;
+module.exports = calculateRoot;

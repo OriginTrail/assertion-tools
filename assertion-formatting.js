@@ -1,4 +1,4 @@
-import jsonld from 'jsonld';
+const jsonld = require('jsonld');
 
 const ALGORITHM = 'URDNA2015';
 const FORMAT = 'application/n-quads';
@@ -23,4 +23,4 @@ async function formatAssertion(json, inputFormat) {
   return assertion;
 }
 
-export default formatAssertion;
+module.exports = formatAssertion;
