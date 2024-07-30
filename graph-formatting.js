@@ -6,11 +6,31 @@ function isEmptyObject(obj) {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
+function hasGraphField(obj) {
+    if (typeof obj === 'object' && obj !== null) {
+      if ('@graph' in obj) {
+        return true;
+      }
+      for (let key in obj) {
+        if (hasGraphField(obj[key])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
 async function formatGraph(content) {
     let privateAssertion;
+
     if (content.private && !isEmptyObject(content.private)) {
         privateAssertion = await formatAssertion(content.private);
     }
+
+    if(hasGraphField(content)) {
+        throw Error('File contains "@graph" field in content is no supported.');
+    }
+
     const publicGraph = {
         '@graph': [
             content.public && !isEmptyObject(content.public)
