@@ -8,4 +8,6 @@ function keccak256(data) {
   return ethers.utils.keccak256(bytesLikeData);
 };
 
-module.exports = keccak256;
+module.exports = {
+  keccak256,
+};
