@@ -19,7 +19,7 @@ async function formatGraph(content) {
             content.private && !isEmptyObject(content.private)
                 ? {
                     [PRIVATE_ASSERTION_PREDICATE]: privateAssertion 
-                    ? calculateRoot(privateAssertion) : null,
+                    ? (await calculateRoot(privateAssertion)) : null,
                 }
                 : null,
         ],
