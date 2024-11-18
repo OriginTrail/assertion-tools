@@ -1,24 +1,32 @@
-const ethers = require('ethers');
+const { soliditySha256, sha256 } = require('ethers/lib/utils');
 const { MerkleTree } = require('merkletreejs');
-const keccak256 = require('./keccak256.js');
 
-function getMerkleProof(nquadsArray, challenge) {
+async function getMerkleProof(nquadsArray, challenge, options = {}) {
+  const {
+    yieldControlChunkSize = 100,
+  } = options;
+
   nquadsArray.sort();
 
   const leaves = nquadsArray.map((element, index) =>
-    keccak256(
-      ethers.utils.solidityPack(
-        ['bytes32', 'uint256'],
-        [keccak256(element), index]
-      )
-    )
+    soliditySha256(['string', 'uint256'], [element, index])
   );
-  const tree = new MerkleTree(leaves, keccak256, { sortPairs: true });
 
-  return {
-    leaf: keccak256(nquadsArray[challenge]),
-    proof: tree.getHexProof(leaves[challenge]),
-  };
+  for (let i = 0; i < leaves.length; i += 1) {
+    if (i % yieldControlChunkSize === 0) {
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => {setImmediate(resolve)});
+    }
+  }
+
+  const tree = new MerkleTree(leaves, sha256, { sortPairs: true });
+
+  await new Promise((resolve) => {setImmediate(resolve)});
+
+  const leaf = sha256(nquadsArray[challenge]);
+  const proof = tree.getHexProof(leaves[challenge]);
+
+  return { leaf, proof };
 }
 
 module.exports = getMerkleProof;
