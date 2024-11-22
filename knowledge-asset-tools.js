@@ -2,6 +2,7 @@ const jsonld = require('jsonld');
 const ethers = require('ethers');
 const { MerkleTree } = require('merkletreejs');
 const { keccak256 } = require('./utils');
+const { soliditySha256, sha256 } = require('ethers/lib/utils.js');
 
 const PRIVATE_ASSERTION_PREDICATE = 'https://ontology.origintrail.io/dkg/1.0#privateAssertionID';
 const ALGORITHM = 'URDNA2015';
@@ -42,18 +43,52 @@ function getAssertionChunksNumber(assertion) {
   return assertion.length;
 }
 
-function calculateRoot(assertion) {
-  assertion.sort();
-  const leaves = assertion.map((element, index) =>
-    keccak256(
-      ethers.utils.solidityPack(
-        ['bytes32', 'uint256'],
-        [keccak256(element), index]
-      )
+const assertionMetadata = {getAssertionSizeInBytes, getAssertionTriplesNumber, getAssertionChunksNumber}
+
+async function calculateRoot(assertion, options = { }) {
+  const {
+    yieldControlChunkSize = 100,
+  } = options;
+
+  let leaves = assertion.map((element, index) =>
+    Buffer.from(
+      soliditySha256(['string', 'uint256'], [element, index]).replace('0x', ''),
+      'hex'
     )
   );
-  const tree = new MerkleTree(leaves, keccak256, { sortPairs: true });
-  return `0x${tree.getRoot().toString('hex')}`;
+
+  while (leaves.length > 1) {
+    const nextLevel = [];
+
+    for (let i = 0; i < leaves.length; i += 2) {
+      if (i % yieldControlChunkSize === 0) {
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => {setImmediate(resolve)});
+      }
+
+      const left = leaves[i];
+
+      if (i + 1 >= leaves.length) {
+        nextLevel.push(left);
+        break;
+      }
+      const right = leaves[i + 1];
+
+      const combined = [left, right];
+      combined.sort(Buffer.compare);
+
+      const hash = Buffer.from(
+        sha256(Buffer.concat(combined)).replace('0x', ''),
+        'hex'
+      );
+
+      nextLevel.push(hash);
+    }
+
+    leaves = nextLevel;
+  }
+
+  return `0x${leaves[0].toString('hex')}`;
 }
 
 function getMerkleProof(nquadsArray, challenge) {
@@ -80,34 +115,15 @@ function isEmptyObject(obj) {
 }
 
 async function formatGraph(content) {
-  let privateAssertion;
-  if (content.private && !isEmptyObject(content.private)) {
-      privateAssertion = await formatAssertion(content.private);
+  if (isEmptyObject(content)) {
+      return {};
   }
-  const publicGraph = {
-      '@graph': [
-          content.public && !isEmptyObject(content.public)
-              ? content.public
-              : null,
-          content.private && !isEmptyObject(content.private)
-              ? {
-                  [PRIVATE_ASSERTION_PREDICATE]: privateAssertion 
-                  ? calculateRoot(privateAssertion) : null,
-              }
-              : null,
-      ],
-  };
-  const publicAssertion = await formatAssertion(publicGraph);
 
-  const result = {
-      public: publicAssertion,
-  };
-  
-  if (privateAssertion) {
-      result.private = privateAssertion;
+  const graph = {
+      '@graph': [content],
   }
-  
-  return result;
+
+  return await formatAssertion(graph);
 }
 
 async function peerId2Hash(peerId) {
@@ -124,4 +140,5 @@ module.exports = {
   getMerkleProof,
   formatGraph,
   peerId2Hash,
+  assertionMetadata
 };
