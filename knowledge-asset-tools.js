@@ -7,7 +7,7 @@ const { soliditySha256, sha256 } = require('ethers/lib/utils.js');
 const PRIVATE_ASSERTION_PREDICATE = 'https://ontology.origintrail.io/dkg/1.0#privateAssertionID';
 const ALGORITHM = 'URDNA2015';
 const FORMAT = 'application/n-quads';
-
+const N3 = require('n3');
 async function formatAssertion(json, inputFormat) {
   const options = {
     algorithm: ALGORITHM,
@@ -131,6 +131,83 @@ async function peerId2Hash(peerId) {
 }
 
 
+
+function groupNquadsBySubject(nquadsArray) {
+  const store = new N3.Store();
+  const parser = new N3.Parser({ format: 'star' });
+
+  
+  nquadsArray.forEach((quad) => {
+    try {
+      const parsedQuad = parser.parse(quad);
+      parsedQuad.forEach(quad => store.addQuad(quad));
+    } catch (error) {
+      console.error("Error parsing quad:", quad);
+      console.error(error);
+    }
+  });
+
+  
+  function groupTriples(triples) {
+    const grouped = {};
+
+    triples.forEach((quad) => {
+      let subject = quad.subject ? quad.subject : null; 
+      const predicate = quad.predicate.value;
+      let object = quad.object;
+
+      if (subject && subject.termType === 'Quad') {
+        
+        const nestedSubjectKey = `<<${subject.subject.value}> <${subject.predicate.value}> ${subject.object.value}>>`;
+        
+        if (!grouped[nestedSubjectKey]) {
+          grouped[nestedSubjectKey] = [];
+        }
+
+        grouped[nestedSubjectKey].push([predicate, object.value]);
+      } else {
+        
+        object = object ? object.value : '';
+
+        if (!grouped[subject.value]) {
+          grouped[subject.value] = [];
+        }
+
+        grouped[subject.value].push([predicate, object]);
+      }
+    });
+
+    return grouped;
+  }
+
+  const allTriples = store.getQuads(null, null, null, null);
+  return groupTriples(allTriples);
+}
+
+function countDistinctSubjects(nquadsArray) {
+  const store = new N3.Store();
+  const parser = new N3.Parser({ format: 'star' });
+
+ 
+  nquadsArray.forEach((quad) => {
+    try {
+      const parsedQuad = parser.parse(quad);
+      parsedQuad.forEach(quad => store.addQuad(quad));
+    } catch (error) {
+      console.error("Error parsing quad:", quad);
+      console.error(error);
+    }
+  });
+
+  const subjects = new Set();
+ 
+  store.getQuads(null, null, null, null).forEach((quad) => {
+    const subject = quad.subject.value;
+    subjects.add(subject);  
+  });
+
+  return subjects.size;
+}
 module.exports = {
   formatAssertion,
   getAssertionSizeInBytes,
@@ -140,5 +217,7 @@ module.exports = {
   getMerkleProof,
   formatGraph,
   peerId2Hash,
+  groupNquadsBySubject,
+  countDistinctSubjects,
   assertionMetadata
 };
