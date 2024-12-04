@@ -117,7 +117,7 @@ export function calculateMerkleProof(quads, chunkSizeBytes, challenge) {
   };
 }
 
-export function groupNquadsBySubject(nquadsArray) {
+export function groupNquadsBySubject(nquadsArray, sort = false) {
   const parser = new N3.Parser({ format: 'star' });
   const grouped = {};
 
@@ -150,7 +150,15 @@ export function groupNquadsBySubject(nquadsArray) {
     grouped[subjectKey].push(quadString);
   });
 
-  return Object.values(grouped);
+  let groupedValues = Object.entries(grouped);
+
+  if (sort) {
+    groupedValues = groupedValues.sort(([keyA], [keyB]) =>
+      keyA.localeCompare(keyB)
+    );
+  }
+
+  return groupedValues.map(([, quads]) => quads);
 }
 
 export function countDistinctSubjects(nquadsArray) {
