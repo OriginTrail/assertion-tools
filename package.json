@@ -1,8 +1,9 @@
 {
   "name": "assertion-tools",
-  "version": "2.2.1",
+  "version": "8.0.0-alpha.0",
   "description": "Common assertion tools used in ot-node and dkg.js",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "nyc --all mocha --exit"
   },
@@ -19,7 +20,10 @@
   "dependencies": {
     "ethers": "^5.7.2",
     "jsonld": "^8.1.0",
-    "merkletreejs": "^0.3.2"
+    "merkletreejs": "^0.3.2",
+    "n3": "^1.23.1",
+    "rdf-canonize": "^4.0.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "chai": "^4.3.10",
