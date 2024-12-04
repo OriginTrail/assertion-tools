@@ -1,8 +1,9 @@
 {
   "name": "assertion-tools",
-  "version": "2.1.0",
+  "version": "8.0.0-alpha.0",
   "description": "Common assertion tools used in ot-node and dkg.js",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "nyc --all mocha --exit"
   },
