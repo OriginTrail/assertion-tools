@@ -286,7 +286,7 @@ export function generateMissingIdsForBlankNodes(nquadsArray) {
     return updatedQuad;
   });
 
-  return writer.quadsToString(updatedNquads).split("\n");
+  return writer.quadsToString(updatedNquads).trimEnd().split("\n");
 }
 
 function isEmptyObject(obj) {
