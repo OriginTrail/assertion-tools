@@ -29,8 +29,6 @@ export async function formatDataset(
   if (json.private && !isEmptyObject(json.private)) {
     const privateCanonizedJson = await jsonld.canonize(json.private, options);
     privateAssertion = privateCanonizedJson.split("\n").filter((x) => x !== "");
-    json.public[PRIVATE_ASSERTION_PREDICATE] =
-      calculateMerkleRoot(privateAssertion);
   } else if (!("public" in json)) {
     json = { public: json };
   }
@@ -39,7 +37,7 @@ export async function formatDataset(
     .split("\n")
     .filter((x) => x !== "");
 
-  if (publicAssertion && publicAssertion.length === 0) {
+  if (publicAssertion?.length === 0 && privateAssertion?.length === 0) {
     throw Error("File format is corrupted, no n-quads are extracted.");
   }
   const dataset = { public: publicAssertion };
