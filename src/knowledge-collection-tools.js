@@ -37,7 +37,12 @@ export async function formatDataset(
     .split("\n")
     .filter((x) => x !== "");
 
-  if (publicAssertion?.length === 0 && privateAssertion?.length === 0) {
+  if (
+    publicAssertion &&
+    publicAssertion.length === 0 &&
+    privateAssertion &&
+    privateAssertion?.length === 0
+  ) {
     throw Error("File format is corrupted, no n-quads are extracted.");
   }
   const dataset = { public: publicAssertion };
