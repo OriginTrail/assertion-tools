@@ -1,12 +1,17 @@
-import jsonld from 'jsonld';
-import ethers from 'ethers';
-import N3 from 'n3';
-import { v4 as uuidv4 } from 'uuid';
-import { MerkleTree } from 'merkletreejs';
-import { DEFAULT_CANON_ALGORITHM, DEFAULT_RDF_FORMAT } from './constants.js';
-import arraifyKeccak256 from './utils.js';
+import jsonld from "jsonld";
+import ethers from "ethers";
+import N3 from "n3";
+import { v4 as uuidv4 } from "uuid";
+import { MerkleTree } from "merkletreejs";
+import { DEFAULT_CANON_ALGORITHM, DEFAULT_RDF_FORMAT } from "./constants.js";
+import arraifyKeccak256 from "./utils.js";
 
-export async function formatDataset(json, inputFormat, outputFormat=DEFAULT_RDF_FORMAT, algorithm=DEFAULT_CANON_ALGORITHM) {
+export async function formatDataset(
+  json,
+  inputFormat,
+  outputFormat = DEFAULT_RDF_FORMAT,
+  algorithm = DEFAULT_CANON_ALGORITHM
+) {
   const options = {
     algorithm,
     format: outputFormat,
@@ -16,18 +21,36 @@ export async function formatDataset(json, inputFormat, outputFormat=DEFAULT_RDF_
     options.inputFormat = inputFormat;
   }
 
-  const canonizedJson = await jsonld.canonize(json, options);
-  const assertion = canonizedJson.split('\n').filter((x) => x !== '');
+  let privateAssertion;
+  if (json.private && !isEmptyObject(json.private)) {
+    const privateCanonizedJson = await jsonld.canonize(json.private, options);
+    privateAssertion = privateCanonizedJson.split("\n").filter((x) => x !== "");
+  } else if (!json.public) {
+    json = { public: json };
+  }
+  const publicCanonizedJson = await jsonld.canonize(json.public, options);
+  const publicAssertion = publicCanonizedJson
+    .split("\n")
+    .filter((x) => x !== "");
 
-  if (assertion && assertion.length === 0) {
-    throw Error('File format is corrupted, no n-quads are extracted.');
+  if (
+    publicAssertion &&
+    publicAssertion.length === 0 &&
+    privateAssertion &&
+    privateAssertion?.length === 0
+  ) {
+    throw Error("File format is corrupted, no n-quads are extracted.");
+  }
+  const dataset = { public: publicAssertion };
+  if (privateAssertion) {
+    dataset.private = privateAssertion;
   }
 
-  return assertion;
+  return dataset;
 }
 
 export function calculateByteSize(string) {
-  if (typeof string !== 'string') {
+  if (typeof string !== "string") {
     throw Error(`Size can only be calculated for the 'string' objects.`);
   }
 
@@ -38,7 +61,7 @@ export function calculateByteSize(string) {
 
 export function calculateNumberOfChunks(quads, chunkSizeBytes = 32) {
   const encoder = new TextEncoder();
-  const concatenatedQuads = quads.join('\n');
+  const concatenatedQuads = quads.join("\n");
   const totalSizeBytes = encoder.encode(concatenatedQuads).length;
   return Math.ceil(totalSizeBytes / chunkSizeBytes);
 }
@@ -46,7 +69,7 @@ export function calculateNumberOfChunks(quads, chunkSizeBytes = 32) {
 export function splitIntoChunks(quads, chunkSizeBytes = 32) {
   const encoder = new TextEncoder();
 
-  const concatenatedQuads = quads.join('\n');
+  const concatenatedQuads = quads.join("\n");
   const encodedBytes = encoder.encode(concatenatedQuads);
 
   const chunks = [];
@@ -55,18 +78,20 @@ export function splitIntoChunks(quads, chunkSizeBytes = 32) {
   while (start < encodedBytes.length) {
     const end = Math.min(start + chunkSizeBytes, encodedBytes.length);
     const chunk = encodedBytes.slice(start, end);
-    chunks.push(Buffer.from(chunk).toString('utf-8'));
+    chunks.push(Buffer.from(chunk).toString("utf-8"));
     start = end;
   }
 
   return chunks;
 }
 
-export function calculateMerkleRoot(quads, chunkSizeBytes) {
+export function calculateMerkleRoot(quads, chunkSizeBytes = 32) {
   const chunks = splitIntoChunks(quads, chunkSizeBytes);
   let leaves = chunks.map((chunk, index) =>
     Buffer.from(
-      ethers.utils.solidityKeccak256(["string", "uint256"], [chunk, index]).replace("0x", ""),
+      ethers.utils
+        .solidityKeccak256(["string", "uint256"], [chunk, index])
+        .replace("0x", ""),
       "hex"
     )
   );
@@ -101,10 +126,12 @@ export function calculateMerkleRoot(quads, chunkSizeBytes) {
 }
 
 export function calculateMerkleProof(quads, chunkSizeBytes, challenge) {
-  const chunks = splitIntoChunks(quads, chunkSizeBytes)
+  const chunks = splitIntoChunks(quads, chunkSizeBytes);
   const leaves = chunks.map((chunk, index) =>
     Buffer.from(
-      ethers.utils.solidityKeccak256(["string", "uint256"], [chunk, index]).replace("0x", ""),
+      ethers.utils
+        .solidityKeccak256(["string", "uint256"], [chunk, index])
+        .replace("0x", ""),
       "hex"
     )
   );
@@ -118,18 +145,18 @@ export function calculateMerkleProof(quads, chunkSizeBytes, challenge) {
 }
 
 export function groupNquadsBySubject(nquadsArray, sort = false) {
-  const parser = new N3.Parser({ format: 'star' });
+  const parser = new N3.Parser({ format: "star" });
   const grouped = {};
 
-  parser.parse(nquadsArray.join('')).forEach((quad) => {
+  parser.parse(nquadsArray.join("")).forEach((quad) => {
     const { subject, predicate, object } = quad;
 
     let subjectKey;
-    if (subject.termType === 'Quad') {
+    if (subject.termType === "Quad") {
       const nestedSubject = subject.subject.value;
       const nestedPredicate = subject.predicate.value;
       const nestedObject =
-        subject.object.termType === 'Literal'
+        subject.object.termType === "Literal"
           ? `"${subject.object.value}"`
           : `<${subject.object.value}>`;
       subjectKey = `<<<${nestedSubject}> <${nestedPredicate}> ${nestedObject}>>`;
@@ -142,9 +169,7 @@ export function groupNquadsBySubject(nquadsArray, sort = false) {
     }
 
     const objectValue =
-      object.termType === 'Literal'
-        ? `"${object.value}"`
-        : `<${object.value}>`;
+      object.termType === "Literal" ? `"${object.value}"` : `<${object.value}>`;
 
     const quadString = `${subjectKey} <${predicate.value}> ${objectValue} .`;
     grouped[subjectKey].push(quadString);
@@ -165,7 +190,9 @@ export function countDistinctSubjects(nquadsArray) {
   const parser = new N3.Parser({ format: "star" });
   const subjects = new Set();
 
-  parser.parse(nquadsArray.join('')).forEach((quad) => subjects.add(quad.subject.value));
+  parser
+    .parse(nquadsArray.join(""))
+    .forEach((quad) => subjects.add(quad.subject.value));
 
   return subjects.size;
 }
@@ -174,21 +201,21 @@ export function filterTriplesByAnnotation(
   nquadsArray,
   annotationPredicate = null,
   annotationValue = null,
-  filterNested = true,
+  filterNested = true
 ) {
-  const parser = new N3.Parser({ format: 'star' });
+  const parser = new N3.Parser({ format: "star" });
   const filteredTriples = [];
 
-  parser.parse(nquadsArray.join('')).forEach((quad) => {
+  parser.parse(nquadsArray.join("")).forEach((quad) => {
     const { subject, predicate, object } = quad;
 
-    const isNested = subject.termType === 'Quad';
+    const isNested = subject.termType === "Quad";
 
     if (filterNested && isNested) {
       const nestedSubject = subject.subject.value;
       const nestedPredicate = subject.predicate.value;
       const nestedObject =
-        subject.object.termType === 'Literal'
+        subject.object.termType === "Literal"
           ? `"${subject.object.value}"`
           : `<${subject.object.value}>`;
 
@@ -204,7 +231,7 @@ export function filterTriplesByAnnotation(
     } else if (!filterNested && !isNested) {
       const subjectValue = `<${subject.value}>`;
       const objectValue =
-        object.termType === 'Literal'
+        object.termType === "Literal"
           ? `"${object.value}"`
           : `<${object.value}>`;
 
@@ -224,41 +251,45 @@ export function filterTriplesByAnnotation(
 }
 
 export function generateMissingIdsForBlankNodes(nquadsArray) {
-  const parser = new N3.Parser({ format: 'star' });
-  const writer = new N3.Writer({ format: 'star' });
+  const parser = new N3.Parser({ format: "star" });
+  const writer = new N3.Writer({ format: "star" });
   const generatedIds = {};
 
   // Function to replace blank nodes in quads and nested RDF-star triples
   function replaceBlankNode(term) {
-    if (term.termType === 'BlankNode') {
+    if (term.termType === "BlankNode") {
       if (!generatedIds[term.value]) {
         generatedIds[term.value] = `uuid:${uuidv4()}`;
       }
       return N3.DataFactory.namedNode(generatedIds[term.value]);
     }
-    
-    if (term.termType === 'Quad') {
+
+    if (term.termType === "Quad") {
       // Recursively handle nested RDF-star triples
       return N3.DataFactory.quad(
         replaceBlankNode(term.subject),
         replaceBlankNode(term.predicate),
-        replaceBlankNode(term.object),
+        replaceBlankNode(term.object)
       );
     }
     return term; // Return IRI or Literal unchanged
   }
 
-  const updatedNquads = parser.parse(nquadsArray.join('')).map((quad) => {
+  const updatedNquads = parser.parse(nquadsArray.join("")).map((quad) => {
     // Replace blank nodes in the quad
     const updatedQuad = N3.DataFactory.quad(
       replaceBlankNode(quad.subject),
       replaceBlankNode(quad.predicate),
-      replaceBlankNode(quad.object),
+      replaceBlankNode(quad.object)
     );
 
     // Convert back to string format
     return updatedQuad;
   });
 
-  return writer.quadsToString(updatedNquads).split('\n');
+  return writer.quadsToString(updatedNquads).trimEnd().split("\n");
+}
+
+function isEmptyObject(obj) {
+  return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
