@@ -3,11 +3,7 @@ import ethers from "ethers";
 import N3 from "n3";
 import { v4 as uuidv4 } from "uuid";
 import { MerkleTree } from "merkletreejs";
-import {
-  DEFAULT_CANON_ALGORITHM,
-  DEFAULT_RDF_FORMAT,
-  PRIVATE_ASSERTION_PREDICATE,
-} from "./constants.js";
+import { DEFAULT_CANON_ALGORITHM, DEFAULT_RDF_FORMAT } from "./constants.js";
 import arraifyKeccak256 from "./utils.js";
 
 export async function formatDataset(
@@ -29,7 +25,7 @@ export async function formatDataset(
   if (json.private && !isEmptyObject(json.private)) {
     const privateCanonizedJson = await jsonld.canonize(json.private, options);
     privateAssertion = privateCanonizedJson.split("\n").filter((x) => x !== "");
-  } else if (!("public" in json)) {
+  } else if (!json.public) {
     json = { public: json };
   }
   const publicCanonizedJson = await jsonld.canonize(json.public, options);
