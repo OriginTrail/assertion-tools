@@ -1,11 +1,17 @@
 {
   "name": "assertion-tools",
-  "version": "8.0.0-gamma.1",
+  "version": "8.0.0-gamma.2",
   "description": "Common assertion tools used in ot-node and dkg.js",
   "main": "index.js",
   "type": "module",
+  "exports": {
+    "import": "./index.js",
+    "require": "./index.cjs"
+  },
   "scripts": {
-    "test": "nyc --all mocha --exit"
+    "test": "nyc --all mocha --exit",
+    "cjs-compat": "npx rollup index.js --file index.cjs --format cjs",
+    "postinstall": "npm run cjs-compat"
   },
   "repository": {
     "type": "git",
@@ -33,6 +39,7 @@
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "prettier": "^3.0.3",
+    "rollup": "^4.28.1",
     "sinon": "^16.0.0"
   }
 }
