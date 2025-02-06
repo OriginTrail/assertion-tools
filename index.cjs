@@ -289,7 +289,7 @@ function groupNquadsBySubject(nquadsArray, sort = false) {
       const nestedPredicate = subject.predicate.value;
       const nestedObject =
         subject.object.termType === "Literal"
-          ? `"${subject.object.value}"`
+          ? `"""${subject.object.value}"""`
           : `<${subject.object.value}>`;
       subjectKey = `<<<${nestedSubject}> <${nestedPredicate}> ${nestedObject}>>`;
     } else {
@@ -301,7 +301,7 @@ function groupNquadsBySubject(nquadsArray, sort = false) {
     }
 
     const objectValue =
-      object.termType === "Literal" ? `"${object.value}"` : `<${object.value}>`;
+      object.termType === "Literal" ? `"""${object.value}"""` : `<${object.value}>`;
 
     const quadString = `${subjectKey} <${predicate.value}> ${objectValue} .`;
     grouped[subjectKey].push(quadString);
