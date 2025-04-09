@@ -144,6 +144,28 @@ export function calculateMerkleProof(quads, chunkSizeBytes, challenge) {
   };
 }
 
+export function calculateMerkleRootFromProof(chunks, challenge, proof) {
+  let currentHashBuffer = Buffer.from(
+    ethers.utils
+      .solidityKeccak256(["string", "uint256"], [chunks[challenge], challenge])
+      .replace("0x", ""),
+    "hex"
+  );
+
+  for (const proofElement of proof) {
+    const proofBuffer = Buffer.from(proofElement.replace("0x", ""), "hex");
+
+    const combined = [currentHashBuffer, proofBuffer].sort(Buffer.compare);
+
+    currentHashBuffer = Buffer.from(
+      ethers.utils.keccak256(Buffer.concat(combined)).replace("0x", ""),
+      "hex"
+    );
+  }
+
+  return `0x${currentHashBuffer.toString("hex")}`;
+}
+
 export function groupNquadsBySubject(nquadsArray, sort = false) {
   const parser = new N3.Parser({ format: "star" });
   const grouped = {};
