@@ -157,8 +157,8 @@ export function groupNquadsBySubject(nquadsArray, sort = false) {
       const nestedPredicate = subject.predicate.value;
       const nestedObject =
         subject.object.termType === "Literal"
-          ? `"""${subject.object.value}"""`
-          : `<${subject.object.value}>`;
+          ? `"${escapeLiteral(subject.object.value)}"`
+          : `<${escapeLiteral(subject.object.value)}>`;
       subjectKey = `<<<${nestedSubject}> <${nestedPredicate}> ${nestedObject}>>`;
     } else {
       subjectKey = `<${subject.value}>`;
@@ -169,7 +169,9 @@ export function groupNquadsBySubject(nquadsArray, sort = false) {
     }
 
     const objectValue =
-      object.termType === "Literal" ? `"""${object.value}"""` : `<${object.value}>`;
+      object.termType === "Literal"
+        ? `"${escapeLiteral(object.value)}"`
+        : `<${escapeLiteral(object.value)}>`;
 
     const quadString = `${subjectKey} <${predicate.value}> ${objectValue} .`;
     grouped[subjectKey].push(quadString);
@@ -292,4 +294,18 @@ export function generateMissingIdsForBlankNodes(nquadsArray) {
 
 function isEmptyObject(obj) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
+}
+
+function escapeLiteral(value) {
+  const ESCAPE_MAP = {
+    '"': '\\"',
+    "\\": "\\\\",
+    "\b": "\\b",
+    "\f": "\\f",
+    "\n": "\\n",
+    "\r": "\\r",
+    "\t": "\\t",
+  };
+
+  return value.replace(/["\\\b\f\n\r\t]/g, (char) => ESCAPE_MAP[char]);
 }
