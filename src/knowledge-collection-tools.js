@@ -127,21 +127,106 @@ export function calculateMerkleRoot(quads, chunkSizeBytes = 32) {
 
 export function calculateMerkleProof(quads, chunkSizeBytes, challenge) {
   const chunks = splitIntoChunks(quads, chunkSizeBytes);
+
+  // Step 1: Generate leaf hashes using Solidity-compatible hashing
   const leaves = chunks.map((chunk, index) =>
     Buffer.from(
       ethers.utils
         .solidityKeccak256(["string", "uint256"], [chunk, index])
-        .replace("0x", ""),
+        .slice(2), // strip "0x"
       "hex"
     )
   );
 
-  const tree = new MerkleTree(leaves, arraifyKeccak256, { sortPairs: true });
+  const proof = [];
+  let index = challenge;
+  let currentLevel = leaves;
+
+  // Step 2: Traverse tree upward and build proof path
+  while (currentLevel.length > 1) {
+    const nextLevel = [];
+
+    for (let i = 0; i < currentLevel.length; i += 2) {
+      const left = currentLevel[i];
+      const right = i + 1 < currentLevel.length ? currentLevel[i + 1] : null;
+
+      if (right) {
+        // Sort pair like Solidity (<)
+        const [first, second] =
+          Buffer.compare(left, right) < 0 ? [left, right] : [right, left];
+
+        const combined = Buffer.concat([first, second]);
+        const parent = Buffer.from(
+          ethers.utils.keccak256(combined).slice(2),
+          "hex"
+        );
+
+        nextLevel.push(parent);
+
+        // Collect sibling if current index is part of this pair
+        if (i === index || i + 1 === index) {
+          const sibling = i === index ? right : left;
+          proof.push(`0x${sibling.toString("hex")}`);
+          index = Math.floor(i / 2);
+        }
+      } else {
+        // Odd number of nodes – carry unpaired node up
+        nextLevel.push(left);
+
+        if (i === index) {
+          index = Math.floor(i / 2);
+        }
+      }
+    }
+
+    currentLevel = nextLevel;
+  }
+
+  const leaf = leaves[challenge];
+  const root = currentLevel[0];
 
   return {
-    leaf: arraifyKeccak256(chunks[challenge]),
-    proof: tree.getHexProof(leaves[challenge]),
+    root: `0x${root.toString("hex")}`,
+    proof,
+    leaf: `0x${leaf.toString("hex")}`,
+    chunk: chunks[challenge],
+    chunkId: challenge,
   };
+}
+
+export function computeMerkleRootFromProof(chunks, chunkId, proof) {
+  // Get the specific chunk we're proving
+  const challengeChunk = chunks[chunkId];
+  if (!challengeChunk) {
+    throw new Error(`Chunk ${chunkId} not found in chunks array`);
+  }
+
+  // Calculate initial hash from the chunk and its ID
+  let currentHash = Buffer.from(
+    ethers.utils
+      .solidityKeccak256(["string", "uint256"], [challengeChunk, chunkId])
+      .slice(2),
+    "hex"
+  );
+
+  // Process each proof element
+  for (const siblingHex of proof) {
+    const sibling = Buffer.from(siblingHex.slice(2), "hex");
+
+    // Ensure deterministic ordering of hashes
+    const [first, second] =
+      Buffer.compare(currentHash, sibling) < 0
+        ? [currentHash, sibling]
+        : [sibling, currentHash];
+
+    // Compute parent hash
+    currentHash = Buffer.from(
+      ethers.utils.keccak256(Buffer.concat([first, second])).slice(2),
+      "hex"
+    );
+  }
+
+  return `0x${currentHash.toString("hex")}`;
 }
 
 export function groupNquadsBySubject(nquadsArray, sort = false) {
