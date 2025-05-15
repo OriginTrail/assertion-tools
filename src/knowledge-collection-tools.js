@@ -361,15 +361,13 @@ export function generateMissingIdsForBlankNodes(nquadsArray) {
     }
     return term; // Return IRI or Literal unchanged
   }
-
   const updatedNquads = parser.parse(nquadsArray.join("")).map((quad) => {
     // Replace blank nodes in the quad
     const updatedQuad = N3.DataFactory.quad(
-      replaceBlankNode(quad.subject),
+      replaceBlankNode(quad.graph.termType === "BlankNode" ? quad.graph : quad.subject),
       replaceBlankNode(quad.predicate),
       replaceBlankNode(quad.object)
     );
-
     // Convert back to string format
     return updatedQuad;
   });
