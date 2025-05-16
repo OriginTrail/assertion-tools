@@ -363,7 +363,7 @@ export function generateMissingIdsForBlankNodes(nquadsArray) {
   }
   const unsupportedNquads = [];
   const updatedNquads = parser.parse(nquadsArray.join("")).map((quad) => {
-    // Check if BlankNodes are parsed as named graphs
+    // Check if BlankNodes are parsed as graphs
     if (quad.graph.termType === "BlankNode") {
         unsupportedNquads.push(writer.quadToString(quad.object, quad.predicate, quad.object, quad.graph));
     }
@@ -379,9 +379,9 @@ export function generateMissingIdsForBlankNodes(nquadsArray) {
   });
 
   if (unsupportedNquads.length > 0) {
-        console.error(`
+        throw new Error(`
 ------------------------------------------------------------------------------------------------
-Error: Unsupported JSON-LD input detected
+Unsupported JSON-LD input detected
 
 After parsing the JSON-LD input, the parser detected creation of new named graphs.
 The DKG does not support custom named graphs.
@@ -390,9 +390,10 @@ Problematic Quads:
 ${unsupportedNquads.map((q, i) => `  ${i + 1}. ${q}`).join("\n")}
 
 Full Parsed N-Quads Array:
-`, nquadsArray, '\n');
-
-        throw new Error("Parsing failed due to presence of unnamed (blank node) graphs. Please ensure all graphs in the input JSON-LD have proper named IRIs.");
+${nquadsArray.join('\n')}
+Parsing failed due to presence of unnamed (blank node) graphs. Please ensure all graphs in the input JSON-LD have proper named IRIs.
+`
+        );
   }
 
   return writer.quadsToString(updatedNquads).trimEnd().split("\n");
