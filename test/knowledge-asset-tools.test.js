@@ -117,6 +117,6 @@ describe("formatGraph", () => {
     expect(result.private).to.deep.equal([
       "<http://example.org/privateSubject> <http://example.org/privatePredicate> <http://example.org/privateObject> .",
     ]);
-    expect(result.public[0]).to.match(/^<http:\/\/example\.org\/private>/);
+    expect(result.public[0]).to.include("https://ontology.origintrail.io/dkg/1.0#privateAssertionID");
   });
 });
