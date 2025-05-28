@@ -122,19 +122,202 @@ describe("calculateMerkleProof", () => {
 });
 
 describe("groupNquadsBySubject", () => {
-  it("should group quads by a single subject", () => {
+  it("should group quads where the object is a resource", () => {
+    /* JSON-LD
+      {
+        "@context": "http://schema.org",
+        "@id": "http://example.org/book1",
+        "type": "Book",
+        "author": {
+        "@id": "http://example.org/author1"
+        }
+      }
+    */
     const quads = [
-      "<http://example.org/s1> <http://example.org/p> <http://example.org/o> .",
-      '<http://example.org/s1> <http://example.org/p> "Literal" .',
+      "<http://example.org/book1> <http://schema.org/author> <http://example.org/author1> .",
+      "<http://example.org/book1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Book> .",
     ];
+
     const grouped = groupNquadsBySubject(quads);
     expect(grouped).to.have.lengthOf(1);
-    expect(grouped[0]).to.deep.include(
-      "<http://example.org/s1> <http://example.org/p> <http://example.org/o> ."
-    );
-    expect(grouped[0]).to.deep.include(
-      '<http://example.org/s1> <http://example.org/p> "Literal" .'
-    );
+    expect(grouped[0]).to.deep.include(quads[0]);
+    expect(grouped[0]).to.deep.include(quads[1]);
+  });
+
+  it("should group quads where the object is a literal", () => {
+    /* JSON-LD
+    {
+      "@context": "http://schema.org",
+      "@id": "http://example.org/book1",
+      "type": "Book",
+      "title": "The Great Book"
+    }
+    */
+    const quads = [
+        '<http://example.org/book1> <http://schema.org/title> "The Great Book" .',
+        '<http://example.org/book1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Book> .',
+    ];
+
+    const grouped = groupNquadsBySubject(quads);
+    expect(grouped).to.have.lengthOf(1);
+    expect(grouped[0]).to.deep.include(quads[0]);
+    expect(grouped[0]).to.deep.include(quads[1]);
+  });
+
+  it("should group quads where the object is a literal containing an escape character", () => {
+    /* JSON-LD
+    {
+      "@context": "http://schema.org",
+      "@id": "http://example.org/book1",
+      "type": "Book",
+      "title": "The Great Book \n"
+    }
+    */
+    const quads = [
+        // \n is represented as \\n in code
+        '<http://example.org/book1> <http://schema.org/title> "The Great Book \\n" .',
+        '<http://example.org/book1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Book> .',
+    ];
+
+    const grouped = groupNquadsBySubject(quads);
+    expect(grouped).to.have.lengthOf(1);
+    expect(grouped[0]).to.deep.include(quads[0]);
+    expect(grouped[0]).to.deep.include(quads[1]);
+  });
+
+  it("should group quads where the object is a typed literal", () => {
+    /* JSON-LD
+    {
+      "@context": "http://schema.org",
+      "@id": "http://example.org/book1",
+      "type": "Book",
+      "publicationDate": {
+        "@value": "2025-05-28",
+        "@type": "http://www.w3.org/2001/XMLSchema#date"
+      }
+    }
+    */
+    const quads = [
+        '<http://example.org/book1> <http://schema.org/publicationDate> "2025-05-28"^^<http://www.w3.org/2001/XMLSchema#date> .',
+        '<http://example.org/book1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Book> .',
+    ];
+
+    const grouped = groupNquadsBySubject(quads);
+    expect(grouped).to.have.lengthOf(1);
+    expect(grouped[0]).to.deep.include(quads[0]);
+    expect(grouped[0]).to.deep.include(quads[1]);
+  });
+
+  it("should group quads where the object is a typed literal that includes an escape character", () => {
+    /* JSON-LD
+    {
+      "@context": "http://schema.org",
+      "@id": "http://example.org/book1",
+      "type": "Book",
+      "publicationDate": {
+        "@value": "2025-05-28 \n",
+        "@type": "http://www.w3.org/2001/XMLSchema#date"
+      }
+    }
+    */
+    const quads = [
+        // \n is represented as \\n in code
+        '<http://example.org/book1> <http://schema.org/publicationDate> "2025-05-28 \\n"^^<http://www.w3.org/2001/XMLSchema#date> .',
+        '<http://example.org/book1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Book> .',
+    ];
+
+    const grouped = groupNquadsBySubject(quads);
+    expect(grouped).to.have.lengthOf(1);
+    expect(grouped[0]).to.deep.include(quads[0]);
+    expect(grouped[0]).to.deep.include(quads[1]);
+  });
+
+  it("should group quads where the object is a literal with language defined", () => {
+    /* JSON-LD
+    {
+      "@context": "http://schema.org",
+      "@id": "http://example.org/book1",
+      "type": "Book",
+      "description": [
+        {
+        "@value": "A thrilling adventure novel.",
+        "@language": "en"
+        },
+        {
+        "@value": "Napeta pustolovska novela.",
+        "@language": "sl"
+        }
+      ]
+    }
+    */
+    const quads = [
+        '<http://example.org/book1> <http://schema.org/description> "A thrilling adventure novel."@en .',
+        '<http://example.org/book1> <http://schema.org/description> "Napeta pustolovska novela."@sl .',
+        '<http://example.org/book1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Book> .',
+    ];
+
+    const grouped = groupNquadsBySubject(quads);
+    expect(grouped).to.have.lengthOf(1);
+    expect(grouped[0]).to.deep.include(quads[0]);
+    expect(grouped[0]).to.deep.include(quads[1]);
+    expect(grouped[0]).to.deep.include(quads[2]);
+  });
+
+  it("should group quads where the object is a literal with language defined, containing an escape character", () => {
+    /* JSON-LD
+    {
+      "@context": "http://schema.org",
+      "@id": "http://example.org/book1",
+      "type": "Book",
+      "description": [
+        {
+        "@value": "A thrilling adventure novel. \n",
+        "@language": "en"
+        },
+        {
+        "@value": "Napeta pustolovska novela. \n",
+        "@language": "sl"
+        }
+      ]
+    }
+    */
+    const quads = [
+        // \n is represented as \\n in code
+        '<http://example.org/book1> <http://schema.org/description> "A thrilling adventure novel. \\n"@en .',
+        '<http://example.org/book1> <http://schema.org/description> "Napeta pustolovska novela. \\n"@sl .',
+        '<http://example.org/book1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Book> .',
+    ];
+
+    const grouped = groupNquadsBySubject(quads);
+    expect(grouped).to.have.lengthOf(1);
+    expect(grouped[0]).to.deep.include(quads[0]);
+    expect(grouped[0]).to.deep.include(quads[1]);
+    expect(grouped[0]).to.deep.include(quads[2]);
+  });
+
+  it("should group quads where the object is a literal with language defined, while subject is a blank node", () => {
+    /* JSON-LD
+    {
+      "@context": {
+        "predicate": "http://example.org/predicate"
+      },
+      "@graph": [
+        {
+        "predicate": {
+            "@value": "something",
+            "@language": "en"
+        }
+        }
+      ]
+    }
+    */
+    const quads = [
+        '<SOME-UUID> <http://example.org/predicate> "something"@en .',
+    ];
+
+    const grouped = groupNquadsBySubject(quads);
+    expect(grouped).to.have.lengthOf(1);
+    expect(grouped[0]).to.deep.include(quads[0]);
   });
 
   it("should group quads by multiple subjects", () => {
