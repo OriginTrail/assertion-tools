@@ -404,17 +404,3 @@ Parsing failed due to presence of unnamed (blank node) graphs. Please ensure all
 function isEmptyObject(obj) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
-
-function escapeLiteral(value) {
-  const ESCAPE_MAP = {
-    '"': '\\"',
-    "\\": "\\\\",
-    "\b": "\\b",
-    "\f": "\\f",
-    "\n": "\\n",
-    "\r": "\\r",
-    "\t": "\\t",
-  };
-
-  return value.replace(/["\\\b\f\n\r\t]/g, (char) => ESCAPE_MAP[char]);
-}
