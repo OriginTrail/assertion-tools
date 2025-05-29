@@ -366,7 +366,7 @@ function groupNquadsBySubject(nquadsArray, sort = false) {
   const grouped = {};
 
   parser.parse(nquadsArray.join("")).forEach((quad) => {
-    const { subject, predicate, object } = quad;
+    const { subject } = quad;
 
     let subjectKey;
     if (subject.termType === "Quad") {
@@ -374,8 +374,8 @@ function groupNquadsBySubject(nquadsArray, sort = false) {
       const nestedPredicate = subject.predicate.value;
       const nestedObject =
         subject.object.termType === "Literal"
-          ? `"${escapeLiteral(subject.object.value)}"`
-          : `<${escapeLiteral(subject.object.value)}>`;
+          ? `"${subject.object.value}"`
+          : `<${subject.object.value}>`;
       subjectKey = `<<<${nestedSubject}> <${nestedPredicate}> ${nestedObject}>>`;
     } else {
       subjectKey = `<${subject.value}>`;
@@ -385,12 +385,14 @@ function groupNquadsBySubject(nquadsArray, sort = false) {
       grouped[subjectKey] = [];
     }
 
-    const objectValue =
-      object.termType === "Literal"
-        ? `"${escapeLiteral(object.value)}"`
-        : `<${escapeLiteral(object.value)}>`;
+    const writer = new N3.Writer({ format: "N-Quads" });
+    let quadString = "";
+    writer.addQuad(quad);
+    writer.end((error, result) => {
+      if (error) throw error;
+      quadString = result.trim();
+    });
 
-    const quadString = `${subjectKey} <${predicate.value}> ${objectValue} .`;
     grouped[subjectKey].push(quadString);
   });
 
@@ -532,20 +534,6 @@ ${nquadsArray.join('\n')}
 
 function isEmptyObject(obj) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
-}
-
-function escapeLiteral(value) {
-  const ESCAPE_MAP = {
-    '"': '\\"',
-    "\\": "\\\\",
-    "\b": "\\b",
-    "\f": "\\f",
-    "\n": "\\n",
-    "\r": "\\r",
-    "\t": "\\t",
-  };
-
-  return value.replace(/["\\\b\f\n\r\t]/g, (char) => ESCAPE_MAP[char]);
 }
 
 var knowledgeCollectionTools = /*#__PURE__*/Object.freeze({
