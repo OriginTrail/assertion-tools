@@ -393,7 +393,6 @@ ${unsupportedNquads.map((q, i) => `  ${i + 1}. ${q}`).join("\n")}
 
 Full Parsed N-Quads Array:
 ${nquadsArray.join('\n')}
-Parsing failed due to presence of unnamed (blank node) graphs. Please ensure all graphs in the input JSON-LD have proper named IRIs.
 `
         );
   }

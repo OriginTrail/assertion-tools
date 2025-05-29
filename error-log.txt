@@ -1,0 +1,27 @@
+
+------------------------------------------------------------------------------------------------
+Unsupported JSON-LD input detected
+
+After parsing the JSON-LD input, the parser detected creation of new named graphs.
+The DKG does not support custom named graphs.
+
+Problematic Quads:
+  1. "Carol" <http://schema.org/name> "Carol" _:b31_c14n0 .
+
+  2. <http://schema.org/Person> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:b31_c14n0 .
+
+  3. "Bob" <http://schema.org/name> "Bob" _:b31_c14n1 .
+
+  4. <http://schema.org/Person> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:b31_c14n1 .
+
+
+Full Parsed N-Quads Array:
+_:c14n2 <http://schema.org/name> "Carol" _:c14n0 .
+_:c14n2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:c14n0 .
+_:c14n3 <http://schema.org/knows> _:c14n0 .
+_:c14n3 <http://schema.org/knows> _:c14n1 .
+_:c14n3 <http://schema.org/name> "Alice" .
+_:c14n3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
+_:c14n4 <http://schema.org/name> "Bob" _:c14n1 .
+_:c14n4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:c14n1 .
+Parsing failed due to presence of unnamed (blank node) graphs. Please ensure all graphs in the input JSON-LD have proper named IRIs.

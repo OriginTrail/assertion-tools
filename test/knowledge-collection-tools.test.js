@@ -866,7 +866,6 @@ _:c14n3 <http://schema.org/name> "Alice" .
 _:c14n3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
 _:c14n4 <http://schema.org/name> "Bob" _:c14n1 .
 _:c14n4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:c14n1 .
-Parsing failed due to presence of unnamed (blank node) graphs. Please ensure all graphs in the input JSON-LD have proper named IRIs.
 `);
     }
   });
