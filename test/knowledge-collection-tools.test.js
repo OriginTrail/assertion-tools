@@ -1,4 +1,6 @@
 import { describe, it } from "mocha";
+      import fs from 'fs';
+import N3 from 'n3';
 import { expect } from "chai";
 import {
   formatDataset,
@@ -530,5 +532,342 @@ describe("generateMissingIdsForBlankNodes", () => {
         `<<${blankNodeIds[1]} <http://example.org/predicate> ${blankNodeIds[2]}>>`
       )
     );
+  });
+
+  it("should replace an object blank node", () => {
+    /*
+     JSON-LD
+    {
+      "@context": {
+        "relatedTo": "http://example.org/relatedTo"
+      },
+      "@id": "http://example.org/document/1",
+      "relatedTo": {}
+    }
+     */
+    const nquadsArray = [
+      "<http://example.org/document/1> <http://example.org/relatedTo> _:c14n0 .",
+    ];
+
+    const updatedQuads = generateMissingIdsForBlankNodes(nquadsArray);
+
+    const parser = new N3.Parser();
+    const quads = parser.parse(updatedQuads.join('\n'));
+
+    expect(quads[0]._subject.id).equals('http://example.org/document/1');
+
+    expect(quads[0]._predicate.id).equals('http://example.org/relatedTo');
+
+    const uuidRegex = /^uuid:[0-9a-fA-F\-]{36}$/;
+    expect(quads[0]._object.id.match(uuidRegex));
+
+    expect(quads[0]._graph.id).equals('');
+  });
+
+  it("should replace an occuring object blank node", () => {
+    /*
+     JSON-LD
+    {
+      "@context": {
+        "is": {"@id": "http://example.org/is"}
+      },
+      "@graph": [
+        {
+        "@id": "http://example.org/subject1",
+        "is": {"@id": "_:sharedBlank"}
+        },
+        {
+        "@id": "http://example.org/subject2",
+        "is": {"@id": "_:sharedBlank"}
+        }
+      ]
+    }
+     */
+    const nquadsArray = [
+      "<http://example.org/subject1> <http://example.org/is> _:c14n0 .",
+      "<http://example.org/subject2> <http://example.org/is> _:c14n0 .",
+    ];
+
+    const updatedQuads = generateMissingIdsForBlankNodes(nquadsArray);
+
+    const parser = new N3.Parser();
+    const quads = parser.parse(updatedQuads.join('\n'));
+
+    expect(quads[0]._subject.id).equals('http://example.org/subject1');
+    expect(quads[1]._subject.id).equals('http://example.org/subject2');
+
+    expect(quads[0]._predicate.id).equals('http://example.org/is');
+    expect(quads[1]._predicate.id).equals('http://example.org/is');
+
+    const uuidRegex = /^uuid:[0-9a-fA-F\-]{36}$/;
+
+    expect(quads[0]._object.id.match(uuidRegex));
+    expect(quads[1]._object.id.match(uuidRegex));
+
+    expect(quads[0]._graph.id).equals('');
+    expect(quads[1]._graph.id).equals('');
+
+    expect(quads[0]._object.id).equals(quads[1]._object.id);
+  });
+
+  it("should replace a subject blank node", () => {
+    /*
+     JSON-LD
+    {
+      "@context": {
+        "ex": "http://example.org/"
+      },
+      "@graph": [
+        {
+        "ex:name": "John Doe"
+        }
+      ]
+    }
+     */
+    const nquadsArray = [
+      '_:c14n0 <http://example.org/name> "John Doe" .',
+    ];
+
+    const updatedQuads = generateMissingIdsForBlankNodes(nquadsArray);
+
+    const parser = new N3.Parser();
+    const quads = parser.parse(updatedQuads.join('\n'));
+
+    const uuidRegex = /^uuid:[0-9a-fA-F\-]{36}$/;
+    expect(quads[0]._subject.id.match(uuidRegex));
+
+    expect(quads[0]._predicate.id).equals('http://example.org/name');
+
+    expect(quads[0]._object.id).equals('"John Doe"');
+
+    expect(quads[0]._graph.id).equals('');
+  });
+
+  it("should replace an occuring subject blank node", () => {
+    /*
+     JSON-LD
+    {
+      "@context": {
+        "ex": "http://example.org/"
+      },
+      "@graph": [
+        {
+        "ex:name": "John Doe",
+        "ex:sex": "male"
+        }
+      ]
+    }
+     */
+    const nquadsArray = [
+      '_:c14n0 <http://example.org/name> "John Doe" .',
+      '_:c14n0 <http://example.org/sex> "male" .',
+    ];
+
+    const updatedQuads = generateMissingIdsForBlankNodes(nquadsArray);
+
+    const parser = new N3.Parser();
+    const quads = parser.parse(updatedQuads.join('\n'));
+
+    const uuidRegex = /^uuid:[0-9a-fA-F\-]{36}$/;
+    expect(quads[0]._subject.id.match(uuidRegex));
+    expect(quads[1]._subject.id.match(uuidRegex));
+
+    expect(quads[0]._predicate.id).equals('http://example.org/name');
+    expect(quads[1]._predicate.id).equals('http://example.org/sex');
+
+    expect(quads[0]._object.id).equals('"John Doe"');
+    expect(quads[1]._object.id).equals('"male"');
+
+    expect(quads[0]._graph.id).equals('');
+    expect(quads[1]._graph.id).equals('');
+
+    expect(quads[0]._subject.id).equals(quads[1]._subject.id);
+  });
+
+  it("should not replace two different subject blank node with the same UUID", () => {
+    /*
+     JSON-LD
+    {
+      "@context": {
+        "ex": "http://example.org/"
+      },
+      "@graph": [
+        {
+        "ex:hasName": "Alice",
+        "ex:sex": "male"
+        },
+        {
+        "ex:hasName": "Bob",
+        "ex:sex": "female"
+        }
+      ]
+    }
+     */
+    const nquadsArray = [
+      '_:c14n0 <http://example.org/sex> "male" .',
+      '_:c14n0 <http://example.org/hasName> "Bob" .',
+      '_:c14n1 <http://example.org/sex> "female" .',
+      '_:c14n1 <http://example.org/hasName> "Alice" .',
+    ];
+
+    const updatedQuads = generateMissingIdsForBlankNodes(nquadsArray);
+
+    const parser = new N3.Parser();
+    const quads = parser.parse(updatedQuads.join('\n'));
+
+    const uuidRegex = /^uuid:[0-9a-fA-F\-]{36}$/;
+    expect(quads[0]._subject.id.match(uuidRegex));
+    expect(quads[1]._subject.id.match(uuidRegex));
+    expect(quads[2]._subject.id.match(uuidRegex));
+    expect(quads[3]._subject.id.match(uuidRegex));
+
+    expect(quads[0]._predicate.id).equals('http://example.org/sex');
+    expect(quads[1]._predicate.id).equals('http://example.org/hasName');
+    expect(quads[2]._predicate.id).equals('http://example.org/sex');
+    expect(quads[3]._predicate.id).equals('http://example.org/hasName');
+
+    expect(quads[0]._object.id).equals('"male"');
+    expect(quads[1]._object.id).equals('"Bob"');
+    expect(quads[2]._object.id).equals('"female"');
+    expect(quads[3]._object.id).equals('"Alice"');
+
+    expect(quads[0]._graph.id).equals('');
+    expect(quads[1]._graph.id).equals('');
+    expect(quads[2]._graph.id).equals('');
+    expect(quads[3]._graph.id).equals('');
+
+    expect(quads[0]._subject.id).equals(quads[1]._subject.id);
+    expect(quads[2]._subject.id).equals(quads[3]._subject.id);
+    expect(quads[0]._subject.id).not.equals(quads[2]._subject.id);
+  });
+
+  it("should replace an object blank node, that occurs as a subject, with the same UUID", () => {
+    /*
+     JSON-LD
+    {
+      "@context": "http://schema.org",
+      "review": {
+        "reviewBody": "Excellent book!"
+      }
+    }
+     */
+    const nquadsArray = [
+      '_:c14n0 <http://schema.org/reviewBody> "Excellent book!" .',
+      "_:c14n1 <http://schema.org/review> _:c14n0 .",
+    ];
+
+    const updatedQuads = generateMissingIdsForBlankNodes(nquadsArray);
+
+    const parser = new N3.Parser();
+    const quads = parser.parse(updatedQuads.join('\n'));
+
+    const uuidRegex = /^uuid:[0-9a-fA-F\-]{36}$/;
+    expect(quads[0]._subject.id.match(uuidRegex));
+    expect(quads[1]._subject.id.match(uuidRegex));
+
+    expect(quads[0]._predicate.id).equals('http://schema.org/reviewBody');
+    expect(quads[1]._predicate.id).equals('http://schema.org/review');
+
+    expect(quads[0]._object.id).equals('"Excellent book!"');
+    expect(quads[1]._object.id.match(uuidRegex));
+
+    expect(quads[0]._graph.id).equals('');
+    expect(quads[1]._graph.id).equals('');
+
+
+    expect(quads[0]._subject.id).not.equals(quads[1]._subject.id);
+    expect(quads[0]._subject.id).equals(quads[1]._object.id);
+  });
+
+  it("should fail since graphs aren't supported at this stage", () => {
+    /*
+     JSON-LD
+    {
+      "@context": {
+        "@base": "https://example.org/",
+        "name": "http://schema.org/name",
+        "knows": {
+          "@id": "http://schema.org/knows",
+          "@type": "@id"
+        },
+        "Person": "http://schema.org/Person"
+      },
+      "@graph": [
+        {
+          "@type": "Person",
+          "name": "Alice",
+          "knows": [
+            {
+              "@id": "_:bob"
+            },
+            {
+              "@id": "_:carol"
+            }
+          ]
+        },
+        {
+          "@id": "_:bob",
+          "@graph": [
+            {
+              "@type": "Person",
+              "name": "Bob"
+            }
+          ]
+        },
+        {
+          "@id": "_:carol",
+          "@graph": [
+            {
+              "@type": "Person",
+              "name": "Carol"
+            }
+          ]
+        }
+      ]
+    }
+     */
+    const nquadsArray = [
+      '_:c14n2 <http://schema.org/name> "Carol" _:c14n0 .',
+      '_:c14n2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:c14n0 .',
+      '_:c14n3 <http://schema.org/knows> _:c14n0 .',
+      '_:c14n3 <http://schema.org/knows> _:c14n1 .',
+      '_:c14n3 <http://schema.org/name> "Alice" .',
+      '_:c14n3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .',
+      '_:c14n4 <http://schema.org/name> "Bob" _:c14n1 .',
+      '_:c14n4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:c14n1 .'
+    ];
+
+    try {
+      generateMissingIdsForBlankNodes(nquadsArray);
+    } catch (error) {
+      expect(error.message).equals(`
+------------------------------------------------------------------------------------------------
+Unsupported JSON-LD input detected
+
+After parsing the JSON-LD input, the parser detected creation of new named graphs.
+The DKG does not support custom named graphs.
+
+Problematic Quads:
+  1. "Carol" <http://schema.org/name> "Carol" _:b31_c14n0 .
+
+  2. <http://schema.org/Person> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:b31_c14n0 .
+
+  3. "Bob" <http://schema.org/name> "Bob" _:b31_c14n1 .
+
+  4. <http://schema.org/Person> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:b31_c14n1 .
+
+
+Full Parsed N-Quads Array:
+_:c14n2 <http://schema.org/name> "Carol" _:c14n0 .
+_:c14n2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:c14n0 .
+_:c14n3 <http://schema.org/knows> _:c14n0 .
+_:c14n3 <http://schema.org/knows> _:c14n1 .
+_:c14n3 <http://schema.org/name> "Alice" .
+_:c14n3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> .
+_:c14n4 <http://schema.org/name> "Bob" _:c14n1 .
+_:c14n4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Person> _:c14n1 .
+Parsing failed due to presence of unnamed (blank node) graphs. Please ensure all graphs in the input JSON-LD have proper named IRIs.
+`);
+    }
   });
 });
