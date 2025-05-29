@@ -1,5 +1,4 @@
 import { describe, it } from "mocha";
-      import fs from 'fs';
 import N3 from 'n3';
 import { expect } from "chai";
 import {
