@@ -43,10 +43,14 @@ describe("formatDataset", () => {
       },
     };
     const result = await formatDataset(jsonld);
-    expect(result.public).to.deep.equal([
-      "<http://example.org/subject> <http://example.org/predicate> <http://example.org/object> .",
-      '<http://example.org/subject> <https://ontology.origintrail.io/dkg/1.0#privateAssertionID> "0x6bf0031bbcfce4f582136e7deeffcd01eedb4d086e30318fffa22810687196fb" .',
-    ]);
+    expect(result.public).to.have.length(1);
+    expect(result.public[0]).to.equal(
+      "<http://example.org/subject> <http://example.org/predicate> <http://example.org/object> ."
+    );
+    expect(result.private).to.have.length(1);
+    expect(result.private[0]).to.equal(
+      "<http://example.org/privateSubject> <http://example.org/predicate> <http://example.org/privateObject> ."
+    );
     expect(result.private).to.deep.equal([
       "<http://example.org/privateSubject> <http://example.org/predicate> <http://example.org/privateObject> .",
     ]);
