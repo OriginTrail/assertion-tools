@@ -1,5 +1,6 @@
 import { describe, it } from "mocha";
 import N3 from 'n3';
+import { v4 as uuidv4 } from "uuid";
 import { expect } from "chai";
 import {
   formatDataset,
@@ -313,7 +314,7 @@ describe("groupNquadsBySubject", () => {
     }
     */
     const quads = [
-        '<SOME-UUID> <http://example.org/predicate> "something"@en .',
+        `<${uuidv4()}> <http://example.org/predicate> "something"@en .`,
     ];
 
     const grouped = groupNquadsBySubject(quads);
