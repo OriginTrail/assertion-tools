@@ -1,0 +1,12 @@
+{
+  "all": true,
+  "check-coverage": false,
+    "lines": 80 ,
+  "reporter": [
+    "html",
+    "text"
+  ],
+  "include": [
+    "src/**/*.js"
+  ]
+}
