@@ -112,6 +112,28 @@ describe("calculateMerkleRoot", () => {
     const root = calculateMerkleRoot(quads, 32);
     expect(root).to.match(/^0x[0-9a-f]+$/);
   });
+
+  it("should calculate merkle root with real-world example data", () => {
+    const quads = [
+      '<urn:us-cities:info:new-york> <http://schema.org/area> "468.9 sq mi" .',
+      '<urn:us-cities:info:new-york> <http://schema.org/name> "New York" .',
+      '<urn:us-cities:info:new-york> <http://schema.org/population> "8,336,817" .',
+      '<urn:us-cities:info:new-york> <http://schema.org/state> "New York" .',
+      "<urn:us-cities:info:new-york> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/City> .",
+      '<uuid:6fd70e74-369d-4398-bdf3-1f25bfbf551c> <https://ontology.origintrail.io/dkg/1.0#privateMerkleRoot> "0xaac2a420672a1eb77506c544ff01beed2be58c0ee3576fe037c846f97481cefd" .',
+      "<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0x5cb6421dd41c7a62a84c223779303919e7293753d8a1f6f49da2e598013fe652> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:e0367b5c-a594-4131-8870-746f5551fa36> .",
+      "<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0x6a2292b30c844d2f8f2910bf11770496a3a79d5a6726d1b2fd3ddd18e09b5850> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:4ccd8930-90d4-4d6d-9aba-150fca68e18d> .",
+      "<https://ontology.origintrail.io/dkg/1.0#metadata-hash:0xc1f682b783b1b93c9d5386eb1730c9647cf4b55925ec24f5e949e7457ba7bfac> <https://ontology.origintrail.io/dkg/1.0#representsPrivateResource> <uuid:0bb24334-91b8-431c-917a-c6c868325277> .",
+    ];
+
+    const merkle_root = calculateMerkleRoot(quads);
+
+    // Expected merkle root for this dataset
+    const expected_merkle_root = "0x897442f7db61619b9f272c69d787975f169d0624d7f08c216017c3218c8ea5da";
+
+    // Verify the result matches the expected value
+    expect(merkle_root).to.equal(expected_merkle_root);
+  });
 });
 
 describe("calculateMerkleProof", () => {
