@@ -367,7 +367,14 @@ export function generateMissingIdsForBlankNodes(nquadsArray) {
   const updatedNquads = parser.parse(nquadsArray.join("")).map((quad) => {
     // Check if BlankNodes are parsed as graphs
     if (quad.graph.termType === "BlankNode") {
-        unsupportedNquads.push(writer.quadToString(quad.object, quad.predicate, quad.object, quad.graph));
+      unsupportedNquads.push(
+        writer.quadToString(
+          quad.object,
+          quad.predicate,
+          quad.object,
+          quad.graph
+        )
+      );
     }
     // Replace blank nodes in the quad
     const updatedQuad = N3.DataFactory.quad(
@@ -381,7 +388,7 @@ export function generateMissingIdsForBlankNodes(nquadsArray) {
   });
 
   if (unsupportedNquads.length > 0) {
-        throw new Error(`
+    throw new Error(`
 ------------------------------------------------------------------------------------------------
 Unsupported JSON-LD input detected
 
@@ -392,9 +399,8 @@ Problematic Quads:
 ${unsupportedNquads.map((q, i) => `  ${i + 1}. ${q}`).join("\n")}
 
 Full Parsed N-Quads Array:
-${nquadsArray.join('\n')}
-`
-        );
+${nquadsArray.join("\n")}
+`);
   }
 
   return writer.quadsToString(updatedNquads).trimEnd().split("\n");
@@ -402,4 +408,66 @@ ${nquadsArray.join('\n')}
 
 function isEmptyObject(obj) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
+}
+
+export function createKCTriples(dataset, ual, publisher, merkleRoot) {
+  const kcId = ual.split("/").pop();
+  const subjectTriplesMap = groupNquadsBySubject(dataset.public);
+  const subjectTiplesSorted = subjectTriplesMap.sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const triples = [];
+
+  // Generate additional triples from dataset
+  // Create reference triples -- once per KC
+  // <did:dkg:.../KC_1> a dkg:KnowledgeCollection ;
+  triples.push(`<${ual}> a dkg:KnowledgeCollection .`);
+  const kcRef = `<ref:${ual}>`;
+  triples.push(
+    `${kcRef} a dkg:Reference ; dkg:collection <${ual}> ; dkg:merkleRoot "${merkleRoot}" ; prov:wasAttributedTo <${publisher}> .`
+  );
+  // <ref:UAL> a dkg:Reference ;
+  // dkg:collection <did:dkg:.../KC_1> ;
+  // dkg:merkleRoot "${merkleRoot}" ;
+  // prov:wasAttributedTo <did:dkg:.../publisherX>
+
+  for (const [index, subjectTriples] of subjectTiplesSorted.entries()) {
+    // Bound KA ual to subject -- once per KA
+    // <did:dkg:.../KC_1/KA_1> a dkg:KnowledgeAsset ;
+    // dkg:assetOf <subject> .
+    // TODO: Use library to extract subject from triple
+    const subject = subjectTriples[0].split(" ")[0];
+    const kaId = `${kcId}/${index + 1}`;
+    const kaUAL = `${ual}/${kaId}`;
+    const KASubjectRelation = `<${kaUAL}> a dkg:KnowledgeAsset ; dkg:assetOf  ${subject}.`;
+    triples.push(KASubjectRelation);
+    // Bound KA to KC -- once per KA
+    // <did:dkg:.../KC_1> dkg:includesAsset <did:dkg:.../KC_1/KA_1> .
+    const KAtoKCRelation = `<${ual}> dkg:includesAsset <${kaUAL}> .`;
+    triples.push(KASubjectRelation, KAtoKCRelation);
+    // For each triple:
+    // Generate statement triples -- for each KA statment
+    for (const triple of subjectTriples) {
+      const [predicate, object] = triple.split(" ").slice(1);
+      const spoHash = ethers.utils.keccak256(
+        `${subject}||${predicate}||${object}`
+      );
+      const statementTriple = `<stmt:${kcId}:${kaId}:${spoHash}> a dkg:Statement ; 
+                              dkg:aboutSubject ${subject} ; 
+                              dkg:forPredicate ${predicate} ; 
+                              dkg:hasValue ${object} ; 
+                              dkg:rank dkg:PreferredRank ; 
+                              prov:wasAttributedTo <${publisher}> ; 
+                              prov:wasDerivedFrom <${ual}/${kcId}> .`;
+      triples.push(statementTriple);
+      // <stmt:KC_1:KA_1:<hash-s-p-o> a dkg:Statement ;
+      // dkg:aboutSubject <subject> ;
+      // dkg:forPredicate <predicate> ;
+      // dkg:hasValue <object> ;
+      // dkg:rank dkg:PreferredRank ;
+      // prov:wasAttributedTo <did:dkg:.../publisher> ;
+      // prov:wasDerivedFrom <ref:KC_1> ;
+      // prov:generatedAtTime "2025-09-03T10:00:00Z"^^xsd:dateTime .
+    }
+  }
 }
